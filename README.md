@@ -1,5 +1,4 @@
 
-# 🩺 Deep Learning and Medical Images
 ## Chest X-Ray Pneumonia Classifier
 
 A beginner deep learning project that classifies chest X-ray images as **NORMAL** or **PNEUMONIA** using a pretrained ResNet18 model.

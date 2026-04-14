@@ -40,7 +40,7 @@ chest_xray/
 
 **Option 1 — Google Colab (recommended, free GPU)**
 1. Go to [colab.research.google.com](https://colab.research.google.com)
-2. Upload the notebook
+2. Upload the notebook or Create the New notebook
 3. Set runtime to GPU: `Runtime → Change runtime type → GPU`
 4. Run all cells top to bottom
 

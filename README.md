@@ -1,36 +1,23 @@
 # Deep_Learning_and_Medical_images
-#Chest X-Ray Pneumonia Classifier
+## Chest X-Ray Pneumonia Classifier
 This Repository have the project of Deep Learning and Medical Images i Performed
 Stage 1 Project — Medical Image Computer Vision
-In this notebook you will:
 
-Install required libraries Download and explore the dataset Preprocess and load the images Build a classifier using pretrained ResNet18 Train and evaluate the model Make predictions on new images Dataset: Kaggle Chest X-Ray Dataset Classes: NORMAL vs PNEUMONIA Tip: Run on Google Colab with GPU for faster training (Runtime → Change runtime type → GPU)
+In this notebook you will:
+Install required libraries Download and explore the dataset Preprocess and load the images Build a classifier using pretrained ResNet18 Train and evaluate the model Make predictions on new images Dataset: Kaggle Chest X-Ray Dataset Classes: NORMAL vs PNEUMONIA 
+Tip: Run on Google Colab with GPU for faster training (Runtime → Change runtime type → GPU)
 
 # Cell 1 — Install Libraries
-# Install required libraries
 !pip install torch torchvision matplotlib pillow tqdm scikit-learn seaborn --quiet
 print("✅ Libraries installed!")
 
 # Cell 2 — Download Dataset¶ Option A — Google Colab (recommended):
-  Upload your kaggle.json API key first, then run:
-!pip install kaggle --quiet
-!mkdir -p ~/.kaggle && cp kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json
-!kaggle datasets download -d paultimothymooney/chest-xray-pneumonia
-!unzip -q chest-xray-pneumonia.zip
-#Output
-cp: cannot stat 'kaggle.json': No such file or directory
-Warning: Looks like you're using an outdated `kaggle` version (installed: 2.0.0), please consider upgrading to the latest version (2.0.1)
-Dataset URL: https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia
-License(s): other
-Downloading chest-xray-pneumonia.zip to /content
-100% 2.29G/2.29G [00:11<00:00, 221MB/s]
-
-# ---- Run this if using Google Colab with Kaggle API ----
-# from google.colab import files
-# files.upload()  # upload kaggle.json
-# !mkdir -p ~/.kaggle && cp kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json
-# !kaggle datasets download -d paultimothymooney/chest-xray-pneumonia
-# !unzip -q chest-xray-pneumonia.zip
+ ---- Run this if using Google Colab with Kaggle API ----
+### from google.colab import files
+### files.upload()  # upload kaggle.json
+### !mkdir -p ~/.kaggle && cp kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json
+### !kaggle datasets download -d paultimothymooney/chest-xray-pneumonia
+### !unzip -q chest-xray-pneumonia.zip
 
 
 import os
@@ -44,7 +31,7 @@ if os.path.exists(DATA_DIR):
             print(f"  {split}/{cls}: {count} images")
 else:
     print("❌ Dataset not found. Please download it first (see instructions above).")
-# Output
+## Output
 ✅ Dataset found!
   train/NORMAL: 1341 images
   train/PNEUMONIA: 3875 images
@@ -54,7 +41,6 @@ else:
   test/PNEUMONIA: 390 images
   
 # Cell 3 — Explore & Visualise Sample Images
-  
 import matplotlib.pyplot as plt
 from PIL import Image
 import random
@@ -69,23 +55,23 @@ def show_sample_images(data_dir, split='train', n=4):
         for i, fname in enumerate(files):
             img = Image.open(os.path.join(folder, fname)).convert('RGB')
             axes[col][i].imshow(img, cmap='gray')
-            axes[col][i].set_title(cls, fontsize=11,
-                                   color='green' if cls == 'NORMAL' else 'red')
+            axes[col][i].set_title(cls, fontsize=11, color='green' if cls == 'NORMAL' else 'red')
             axes[col][i].axis('off')
 
     plt.tight_layout()
     plt.show()
 
 show_sample_images(DATA_DIR, split='train', n=4)
+## Output, will be the images of X-rays
+<img width="1589" height="738" alt="image" src="https://github.com/user-attachments/assets/9548dc93-5091-4591-be09-fd2188cbcd79" />
 
-    # Output, will be the images of X-rays
 
 # Cell 4 — Preprocess & Load Data
-    import torch
+import torch
 from torchvision import datasets, transforms
 from torch.utils.data import DataLoader
 
-# Image transforms
+### Image transforms
 train_transforms = transforms.Compose([
     transforms.Resize((224, 224)),
     transforms.RandomHorizontalFlip(),       # augmentation: random flip
@@ -107,12 +93,12 @@ val_transforms = transforms.Compose([
     )
 ])
 
-# Load datasets
+### Load datasets
 train_dataset = datasets.ImageFolder(DATA_DIR + "/train", transform=train_transforms)
 val_dataset   = datasets.ImageFolder(DATA_DIR + "/val",   transform=val_transforms)
 test_dataset  = datasets.ImageFolder(DATA_DIR + "/test",  transform=val_transforms)
 
-# Data loaders
+### Data loaders
 train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True,  num_workers=2)
 val_loader   = DataLoader(val_dataset,   batch_size=32, shuffle=False, num_workers=2)
 test_loader  = DataLoader(test_dataset,  batch_size=32, shuffle=False, num_workers=2)
@@ -123,7 +109,7 @@ print(f"Train : {len(train_dataset):,} images")
 print(f"Val   : {len(val_dataset):,} images")
 print(f"Test  : {len(test_dataset):,} images")
 
-# Output - 
+## Output - 
 Classes: ['NORMAL', 'PNEUMONIA']
 Train : 5,216 images
 Val   : 16 images
@@ -133,18 +119,18 @@ Test  : 624 images
 import torch.nn as nn
 from torchvision import models
 
-# Device
+### Device
 device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 print(f"Using device: {device}")
 
-# Load pretrained ResNet18
+### Load pretrained ResNet18
 model = models.resnet18(pretrained=True)
 
-# Freeze all pretrained layers
+### Freeze all pretrained layers
 for param in model.parameters():
     param.requires_grad = False
 
-# Replace the final fully connected layer for 2 classes
+### Replace the final fully connected layer for 2 classes
 model.fc = nn.Sequential(
     nn.Dropout(0.3),
     nn.Linear(512, 2)
@@ -152,19 +138,18 @@ model.fc = nn.Sequential(
 
 model = model.to(device)
 
-# Count trainable parameters
+### Count trainable parameters
 trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
 total     = sum(p.numel() for p in model.parameters())
 print(f"Trainable params : {trainable:,}")
 print(f"Total params     : {total:,}")
 print(f"Frozen params    : {total - trainable:,}")
 
-# Output - Using device: cpu
+## Output - Using device: cpu
 Downloading: "https://download.pytorch.org/models/resnet18-f37072fd.pth" to /root/.cache/torch/hub/checkpoints/resnet18-f37072fd.pth
 /usr/local/lib/python3.12/dist-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
   warnings.warn(
-/usr/local/lib/python3.12/dist-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=ResNet18_Weights.IMAGENET1K_V1`. You can also use `weights=ResNet18_Weights.DEFAULT` to get the most up-to-date weights.
-  warnings.warn(msg)
+/usr/local/lib/python3.12/dist-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=ResNet18_Weights.IMAGENET1K_V1`. You can also use `weights=ResNet18_Weights.DEFAULT` to get the most up-to-date weights.warnings.warn(msg)
 100%|██████████| 44.7M/44.7M [00:00<00:00, 193MB/s]
 Trainable params : 1,026
 Total params     : 11,177,538
@@ -172,229 +157,21 @@ Frozen params    : 11,176,512
 
 # Cell - 6 Set Up Loss & Optimizer
 import torch.optim as optim
-
 criterion = nn.CrossEntropyLoss()
 
-# Only optimize the final layer parameters
+### Only optimize the final layer parameters
 optimizer = optim.Adam(model.fc.parameters(), lr=0.001)
 
-# Learning rate scheduler — reduce LR if val loss plateaus
-scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=2, factor=0.5)
-
-print("✅ Loss, optimizer, and scheduler ready.")
-
-# output
-Chest X-Ray Pneumonia Classifier
-Stage 1 Project — Medical Image Computer Vision
-In this notebook you will:
-
-Install required libraries Download and explore the dataset Preprocess and load the images Build a classifier using pretrained ResNet18 Train and evaluate the model Make predictions on new images Dataset: Kaggle Chest X-Ray Dataset Classes: NORMAL vs PNEUMONIA Tip: Run on Google Colab with GPU for faster training (Runtime → Change runtime type → GPU)
-
-📦 Cell 1 — Install Libraries
-
-[ ]
-# Install required libraries
-!pip install torch torchvision matplotlib pillow tqdm scikit-learn seaborn --quiet
-print("✅ Libraries installed!")
-📥 Cell 2 — Download Dataset¶ Option A — Google Colab (recommended):
-
-
-[ ]
-# Upload your kaggle.json API key first, then run:
-!pip install kaggle --quiet
-!mkdir -p ~/.kaggle && cp kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json
-!kaggle datasets download -d paultimothymooney/chest-xray-pneumonia
-!unzip -q chest-xray-pneumonia.zip
-cp: cannot stat 'kaggle.json': No such file or directory
-Warning: Looks like you're using an outdated `kaggle` version (installed: 2.0.0), please consider upgrading to the latest version (2.0.1)
-Dataset URL: https://www.kaggle.com/datasets/paultimothymooney/chest-xray-pneumonia
-License(s): other
-Downloading chest-xray-pneumonia.zip to /content
-100% 2.29G/2.29G [00:11<00:00, 221MB/s]
-
-
-[ ]
-# ---- Run this if using Google Colab with Kaggle API ----
-# from google.colab import files
-# files.upload()  # upload kaggle.json
-# !mkdir -p ~/.kaggle && cp kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json
-# !kaggle datasets download -d paultimothymooney/chest-xray-pneumonia
-# !unzip -q chest-xray-pneumonia.zip
-
-import os
-
-DATA_DIR = "\:kaggle"
-
-if os.path.exists(DATA_DIR):
-    print("✅ Dataset found!")
-    for split in ['train', 'val', 'test']:
-        for cls in ['NORMAL', 'PNEUMONIA']:
-            path = os.path.join(DATA_DIR, split, cls)
-            count = len(os.listdir(path)) if os.path.exists(path) else 0
-            print(f"  {split}/{cls}: {count} images")
-else:
-    print("❌ Dataset not found. Please download it first (see instructions above).")
-❌ Dataset not found. Please download it first (see instructions above).
-<>:10: SyntaxWarning: invalid escape sequence '\:'
-<>:10: SyntaxWarning: invalid escape sequence '\:'
-/tmp/ipykernel_3843/2223497543.py:10: SyntaxWarning: invalid escape sequence '\:'
-  DATA_DIR = "\:kaggle"
-
-[ ]
-import os
-
-DATA_DIR = "/content/chest_xray"
-
-if os.path.exists(DATA_DIR):
-    print("✅ Dataset found!")
-    for split in ['train', 'val', 'test']:
-        for cls in ['NORMAL', 'PNEUMONIA']:
-            path = os.path.join(DATA_DIR, split, cls)
-            count = len(os.listdir(path)) if os.path.exists(path) else 0
-            print(f"  {split}/{cls}: {count} images")
-else:
-    print("❌ Dataset not found. Please download it first (see instructions above).")
-✅ Dataset found!
-  train/NORMAL: 1341 images
-  train/PNEUMONIA: 3875 images
-  val/NORMAL: 8 images
-  val/PNEUMONIA: 8 images
-  test/NORMAL: 234 images
-  test/PNEUMONIA: 390 images
-🔍 Cell 3 — Explore & Visualize Sample Images
-
-[ ]
-import matplotlib.pyplot as plt
-from PIL import Image
-import random
-
-def show_sample_images(data_dir, split='train', n=4):
-    fig, axes = plt.subplots(2, n, figsize=(16, 8))
-    fig.suptitle(f'Sample {split} images', fontsize=14, fontweight='bold')
-
-    for col, cls in enumerate(['NORMAL', 'PNEUMONIA']):
-        folder = os.path.join(data_dir, split, cls)
-        files = random.sample(os.listdir(folder), n)
-        for i, fname in enumerate(files):
-            img = Image.open(os.path.join(folder, fname)).convert('RGB')
-            axes[col][i].imshow(img, cmap='gray')
-            axes[col][i].set_title(cls, fontsize=11,
-                                   color='green' if cls == 'NORMAL' else 'red')
-            axes[col][i].axis('off')
-
-    plt.tight_layout()
-    plt.show()
-
-show_sample_images(DATA_DIR, split='train', n=4)
-
-Cell 4 — Preprocess & Load Data
-
-[ ]
-import torch
-from torchvision import datasets, transforms
-from torch.utils.data import DataLoader
-
-# Image transforms
-train_transforms = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.RandomHorizontalFlip(),       # augmentation: random flip
-    transforms.RandomRotation(10),           # augmentation: slight rotation
-    transforms.ColorJitter(brightness=0.2),  # augmentation: brightness
-    transforms.ToTensor(),
-    transforms.Normalize(
-        mean=[0.485, 0.456, 0.406],          # ImageNet mean
-        std=[0.229, 0.224, 0.225]            # ImageNet std
-    )
-])
-
-val_transforms = transforms.Compose([
-    transforms.Resize((224, 224)),
-    transforms.ToTensor(),
-    transforms.Normalize(
-        mean=[0.485, 0.456, 0.406],
-        std=[0.229, 0.224, 0.225]
-    )
-])
-
-# Load datasets
-train_dataset = datasets.ImageFolder(DATA_DIR + "/train", transform=train_transforms)
-val_dataset   = datasets.ImageFolder(DATA_DIR + "/val",   transform=val_transforms)
-test_dataset  = datasets.ImageFolder(DATA_DIR + "/test",  transform=val_transforms)
-
-# Data loaders
-train_loader = DataLoader(train_dataset, batch_size=32, shuffle=True,  num_workers=2)
-val_loader   = DataLoader(val_dataset,   batch_size=32, shuffle=False, num_workers=2)
-test_loader  = DataLoader(test_dataset,  batch_size=32, shuffle=False, num_workers=2)
-
-CLASS_NAMES = train_dataset.classes
-print(f"Classes: {CLASS_NAMES}")
-print(f"Train : {len(train_dataset):,} images")
-print(f"Val   : {len(val_dataset):,} images")
-print(f"Test  : {len(test_dataset):,} images")
-Classes: ['NORMAL', 'PNEUMONIA']
-Train : 5,216 images
-Val   : 16 images
-Test  : 624 images
-Cell 5 — Build Model (Pretrained ResNet18)
-
-[ ]
-import torch.nn as nn
-from torchvision import models
-
-# Device
-device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-print(f"Using device: {device}")
-
-# Load pretrained ResNet18
-model = models.resnet18(pretrained=True)
-
-# Freeze all pretrained layers
-for param in model.parameters():
-    param.requires_grad = False
-
-# Replace the final fully connected layer for 2 classes
-model.fc = nn.Sequential(
-    nn.Dropout(0.3),
-    nn.Linear(512, 2)
-)
-
-model = model.to(device)
-
-# Count trainable parameters
-trainable = sum(p.numel() for p in model.parameters() if p.requires_grad)
-total     = sum(p.numel() for p in model.parameters())
-print(f"Trainable params : {trainable:,}")
-print(f"Total params     : {total:,}")
-print(f"Frozen params    : {total - trainable:,}")
-
-# Output
-Using device: cpu
-Downloading: "https://download.pytorch.org/models/resnet18-f37072fd.pth" to /root/.cache/torch/hub/checkpoints/resnet18-f37072fd.pth
-/usr/local/lib/python3.12/dist-packages/torchvision/models/_utils.py:208: UserWarning: The parameter 'pretrained' is deprecated since 0.13 and may be removed in the future, please use 'weights' instead.
-  warnings.warn(
-/usr/local/lib/python3.12/dist-packages/torchvision/models/_utils.py:223: UserWarning: Arguments other than a weight enum or `None` for 'weights' are deprecated since 0.13 and may be removed in the future. The current behavior is equivalent to passing `weights=ResNet18_Weights.IMAGENET1K_V1`. You can also use `weights=ResNet18_Weights.DEFAULT` to get the most up-to-date weights.
-  warnings.warn(msg)
-100%|██████████| 44.7M/44.7M [00:00<00:00, 193MB/s]
-Trainable params : 1,026
-Total params     : 11,177,538
-Frozen params    : 11,176,512
-
-# Cell 6 — Set Up Loss & Optimizer
-
-import torch.optim as optim
-criterion = nn.CrossEntropyLoss()
-# Only optimize the final layer parameters
-optimizer = optim.Adam(model.fc.parameters(), lr=0.001)
-# Learning rate scheduler — reduce LR if val loss plateaus
+### Learning rate scheduler — reduce LR if val loss plateaus
 scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, mode='min', patience=2, factor=0.5)
 print("✅ Loss, optimizer, and scheduler ready.")
 
-# Output
+## output
 ✅ Loss, optimizer, and scheduler ready.
+
 
 # Cell 7 — Train the Model
 from tqdm import tqdm
-
 def train_one_epoch(model, loader, optimizer, criterion):
     model.train()
     total_loss, correct = 0, 0
@@ -421,12 +198,10 @@ def evaluate(model, loader, criterion):
             correct += (outputs.argmax(1) == labels).sum().item()
     return total_loss / len(loader), correct / len(loader.dataset)
 
-# Training loop
+### Training loop
 EPOCHS = 5
 history = {'train_loss': [], 'val_loss': [], 'train_acc': [], 'val_acc': []}
-
 best_val_acc = 0
-
 for epoch in range(EPOCHS):
     print(f"\nEpoch {epoch+1}/{EPOCHS}")
     train_loss, train_acc = train_one_epoch(model, train_loader, optimizer, criterion)
@@ -449,7 +224,7 @@ for epoch in range(EPOCHS):
 
 print("\n🎉 Training complete!")
 
-# Output
+## Output
 Epoch 1/5
   Train Loss: 0.3302 | Train Acc: 85.05%
   Val   Loss: 0.3316 | Val   Acc: 81.25%
@@ -474,7 +249,7 @@ import matplotlib.pyplot as plt
 epochs_range = range(1, EPOCHS + 1)
 fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 5))
 
-# Loss plot
+### Loss plot
 ax1.plot(epochs_range, history['train_loss'], 'b-o', label='Train Loss')
 ax1.plot(epochs_range, history['val_loss'],   'r-o', label='Val Loss')
 ax1.set_title('Loss over Epochs')
@@ -483,7 +258,7 @@ ax1.set_ylabel('Loss')
 ax1.legend()
 ax1.grid(True, alpha=0.3)
 
-# Accuracy plot
+### Accuracy plot
 ax2.plot(epochs_range, [a*100 for a in history['train_acc']], 'b-o', label='Train Acc')
 ax2.plot(epochs_range, [a*100 for a in history['val_acc']],   'r-o', label='Val Acc')
 ax2.set_title('Accuracy over Epochs')
@@ -505,7 +280,7 @@ from sklearn.metrics import classification_report, confusion_matrix
 import seaborn as sns
 import numpy as np
 
-# Load best model
+### Load best model
 model.load_state_dict(torch.load("best_xray_model.pth", map_location=device))
 model.eval()
 
@@ -519,11 +294,11 @@ with torch.no_grad():
         all_preds.extend(preds)
         all_labels.extend(labels.numpy())
 
-# Classification report
+### Classification report
 print("\n📋 Classification Report:")
 print(classification_report(all_labels, all_preds, target_names=CLASS_NAMES))
 
-# Confusion matrix
+### Confusion matrix
 cm = confusion_matrix(all_labels, all_preds)
 plt.figure(figsize=(7, 5))
 sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
@@ -535,7 +310,7 @@ plt.tight_layout()
 plt.savefig('confusion_matrix.png', dpi=120)
 plt.show()
 
-# Output
+## Output
 Testing: 100%|██████████| 20/20 [00:45<00:00,  2.28s/it]
 
 📋 Classification Report:

@@ -13,11 +13,11 @@ print("✅ Libraries installed!")
 
 # Cell 2 — Download Dataset¶ Option A — Google Colab (recommended):
  ---- Run this if using Google Colab with Kaggle API ----
-### from google.colab import files
-### files.upload()  # upload kaggle.json
-### !mkdir -p ~/.kaggle && cp kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json
-### !kaggle datasets download -d paultimothymooney/chest-xray-pneumonia
-### !unzip -q chest-xray-pneumonia.zip
+from google.colab import files
+files.upload()  # upload kaggle.json
+!mkdir -p ~/.kaggle && cp kaggle.json ~/.kaggle/ && chmod 600 ~/.kaggle/kaggle.json
+!kaggle datasets download -d paultimothymooney/chest-xray-pneumonia
+!unzip -q chest-xray-pneumonia.zip
 
 
 import os
